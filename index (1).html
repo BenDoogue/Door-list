@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Door List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-hi: #1e1e1e;
+    --divider: #3a3a3a;
+    --text: #f2f2f2;
+    --text-muted: #888888;
+    --accent: #f2f2f2;
+    --accent-dim: #4a4a4a;
+    --mint: #7fd9a8;
+    --mint-dim: #3f5f4d;
+    --danger: #e0716b;
+    --radius: 0px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color:var(--text);
+    font-family:'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100%;
+    padding-bottom: calc(24px + var(--safe-bottom));
+  }
+  .wrap{ max-width:560px; margin:0 auto; padding:0 16px; }
+
+  /* ---- Header ---- */
+  header{
+    padding: calc(20px + var(--safe-top)) 16px 14px;
+    position: sticky; top:0; z-index: 30;
+    background: var(--bg);
+    border-bottom: 2px solid var(--text);
+  }
+  .header-row{
+    max-width:560px; margin:0 auto;
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  }
+  h1{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800;
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin:0;
+  }
+  .menu-btn{
+    background:var(--surface); border:2px solid var(--text); color:var(--text);
+    width:40px; height:40px; border-radius:0; font-size:18px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .menu-btn:active{ background:var(--text); color:var(--bg); }
+
+  .tally{ max-width:560px; margin:14px auto 0; }
+  .tally-labels{
+    display:flex; justify-content:space-between;
+    font-size:13px; color:var(--text-muted); margin-bottom:6px;
+    font-variant-numeric: tabular-nums;
+    font-family:'JetBrains Mono', monospace;
+    text-transform: uppercase; letter-spacing:0.5px;
+  }
+  .tally-labels strong{ color:var(--text); font-weight:700; }
+  .meter{
+    height:10px; border-radius:0; background:var(--surface);
+    overflow:hidden; border:2px solid var(--text);
+  }
+  .meter-fill{
+    height:100%; border-radius:0;
+    background: repeating-linear-gradient(135deg, var(--mint), var(--mint) 6px, #6bc493 6px, #6bc493 12px);
+    width:0%;
+    transition: width .35s ease;
+  }
+
+  .search-row{ max-width:560px; margin:14px auto 0; position:relative; }
+  .search-row input{
+    width:100%; padding:13px 40px 13px 14px;
+    background:var(--surface); border:2px solid var(--divider);
+    border-radius: var(--radius);
+    color:var(--text); font-size:16px; font-family:'Inter', sans-serif;
+    outline:none;
+  }
+  .search-row input:focus{ border-color: var(--text); }
+  .search-row input::placeholder{ color:var(--text-muted); }
+  .search-clear{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; border-radius:0; border:none;
+    background:var(--surface-hi); color:var(--text-muted); font-size:16px;
+    display:none; align-items:center; justify-content:center;
+  }
+  .search-clear.show{ display:flex; }
+
+  /* ---- List ---- */
+  main{ padding-top: 8px; }
+  .letter-heading{
+    position: sticky; top: 160px; z-index: 10;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px; font-weight:700; letter-spacing:2px;
+    color: var(--bg);
+    background: var(--text);
+    padding: 5px 8px;
+    margin-top: 10px;
+    display:inline-block;
+  }
+  ul.guests{ list-style:none; margin:0; padding:0; }
+  li.guest{
+    display:flex; align-items:center; gap:12px;
+    padding: 13px 4px;
+    border-bottom: 1px solid var(--divider);
+    min-height: 56px;
+  }
+  .guest-info{ flex:1; min-width:0; }
+  .guest-name{ font-size:16px; font-weight:500; line-height:1.3; }
+  .guest-name .plus{ color:var(--text-muted); font-weight:400; font-size:14px; }
+  .guest-sub{ font-size:12.5px; color:var(--text-muted); margin-top:1px; }
+  .status-btn{
+    flex-shrink:0;
+    display:flex; align-items:center; gap:7px;
+    padding: 9px 14px;
+    border-radius:0;
+    border:2px solid var(--divider);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size:13px; font-weight:700;
+    font-family:'JetBrains Mono', monospace;
+    text-transform: uppercase; letter-spacing:0.5px;
+    min-width: 96px; justify-content:center;
+  }
+  .status-btn .dot{ width:8px; height:8px; border-radius:50%; background: var(--text-muted); }
+  .status-btn.arrived{ background: rgba(127,217,168,0.1); border-color: var(--mint); color: var(--mint); }
+  .status-btn.arrived .dot{ background: var(--mint); }
+  li.guest.is-arrived .guest-name{ color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--divider); }
+  .walkin-tag{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px;
+    color: var(--bg); background: var(--text); border-radius:0;
+    padding:1px 5px; margin-left:6px; vertical-align:1px;
+    font-family:'JetBrains Mono', monospace; font-weight:700;
+  }
+  .swipe-x{
+    flex-shrink:0; width:32px; height:32px; border-radius:0;
+    background:none; border:none; color:var(--text-muted); font-size:15px;
+    opacity:0.6;
+  }
+
+  .empty-state{
+    text-align:center; padding: 60px 20px; color:var(--text-muted);
+    font-family:'JetBrains Mono', monospace;
+  }
+  .empty-state .glyph{ font-family:'JetBrains Mono', monospace; font-size:34px; color:var(--text); margin-bottom:8px; }
+
+  /* ---- FAB ---- */
+  .fab{
+    position: fixed; right:20px; bottom: calc(20px + var(--safe-bottom));
+    width:56px; height:56px; border-radius:0;
+    background: var(--text);
+    color: var(--bg); border:2px solid var(--text); font-size:26px; font-weight:700;
+    z-index: 25;
+  }
+  .fab:active{ background: var(--surface); color:var(--text); }
+
+  /* ---- Modal / sheet ---- */
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.75);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .sheet-backdrop.open{ display:flex; }
+  .sheet{
+    width:100%; max-width:560px; background:var(--surface);
+    border-radius: 0; padding: 18px 18px calc(18px + var(--safe-bottom));
+    border:2px solid var(--text); border-bottom:none;
+    max-height: 85vh; overflow-y:auto;
+  }
+  .sheet h2{
+    font-family:'JetBrains Mono', monospace; font-weight:700;
+    text-transform:uppercase; letter-spacing:1px;
+    font-size:18px; margin:0 0 4px;
+  }
+  .sheet p.hint{ color:var(--text-muted); font-size:13px; margin:0 0 14px; line-height:1.5; }
+  .sheet label{
+    font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;
+    font-family:'JetBrains Mono', monospace; text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .sheet input[type=text], .sheet textarea{
+    width:100%; background:var(--bg); border:2px solid var(--divider);
+    border-radius:0; color:var(--text); font-family:'Inter',sans-serif; font-size:15px;
+    padding:11px 12px; outline:none;
+  }
+  .sheet input[type=text]:focus, .sheet textarea:focus{ border-color: var(--text); }
+  .sheet textarea{ min-height:140px; resize:vertical; margin-bottom:14px; font-family:'JetBrains Mono', monospace; font-size:13px; }
+  .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
+  .btn{
+    flex:1; padding:13px; border-radius:0; border:2px solid var(--text);
+    font-size:13px; font-weight:700; font-family:'JetBrains Mono', monospace;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .btn-primary{ background: var(--text); color:var(--bg); }
+  .btn-primary:active{ background: var(--text-muted); }
+  .btn-ghost{ background: transparent; color:var(--text); border:2px solid var(--divider); }
+  .btn-danger{ background: transparent; color:var(--danger); border:2px solid var(--danger); }
+  .menu-list{ display:flex; flex-direction:column; gap:0; }
+  .menu-item{
+    display:flex; align-items:center; gap:12px; padding:14px 8px;
+    border-bottom:1px solid var(--divider); font-size:15px; text-align:left;
+    background:none; border-left:none; border-right:none; border-top:none;
+    color:var(--text); width:100%;
+  }
+  .menu-item:last-child{ border-bottom:none; }
+  .menu-item.danger{ color: var(--danger); }
+  .menu-item .icon{ width:20px; text-align:center; color:var(--text-muted); }
+  .row-inline{ display:flex; gap:10px; margin-bottom:14px; }
+  .row-inline > div{ flex:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <h1>Door List</h1>
+    <button class="menu-btn" id="menuBtn" aria-label="Menu">&#8942;</button>
+  </div>
+  <div class="tally">
+    <div class="tally-labels">
+      <span><strong id="arrivedCount">0</strong> checked in</span>
+      <span id="totalCount">0 total</span>
+    </div>
+    <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+  </div>
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search by name…" autocomplete="off" autocapitalize="words">
+    <button class="search-clear" id="searchClear" aria-label="Clear search">&times;</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="listRoot"></div>
+</main>
+
+<button class="fab" id="addFab" aria-label="Add walk-in guest">+</button>
+
+<!-- Overflow menu -->
+<div class="sheet-backdrop" id="menuBackdrop">
+  <div class="sheet">
+    <h2>Menu</h2>
+    <p class="hint">This device's check-in progress is saved locally in this browser.</p>
+    <div class="menu-list">
+      <button class="menu-item" id="importOpenBtn"><span class="icon">&#9998;</span> Edit / import guest list</button>
+      <button class="menu-item" id="exportBtn"><span class="icon">&#8681;</span> Copy summary</button>
+      <button class="menu-item danger" id="resetCheckinsBtn"><span class="icon">&#8635;</span> Reset all check-ins</button>
+      <button class="menu-item danger" id="clearListBtn"><span class="icon">&#10005;</span> Clear entire guest list</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:14px;">
+      <button class="btn btn-ghost" id="menuCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import / edit sheet -->
+<div class="sheet-backdrop" id="importBackdrop">
+  <div class="sheet">
+    <h2>Guest list</h2>
+    <p class="hint">One guest per line. Add a party size with a comma, e.g. <em>Alex Rivera, 2</em>. This replaces the current list — check-in status is kept for names that match.</p>
+    <textarea id="importText" placeholder="Alex Rivera, 2
+Sam Okafor
+Priya Nair, 4"></textarea>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="importCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="importSaveBtn">Save list</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add walk-in sheet -->
+<div class="sheet-backdrop" id="addBackdrop">
+  <div class="sheet">
+    <h2>Add walk-in</h2>
+    <p class="hint">For guests who weren't on the original list.</p>
+    <div class="row-inline">
+      <div>
+        <label for="addName">Name</label>
+        <input type="text" id="addName" placeholder="Full name" autocapitalize="words">
+      </div>
+      <div style="flex:0 0 90px;">
+        <label for="addParty">Party</label>
+        <input type="text" id="addParty" inputmode="numeric" placeholder="1">
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="addCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="addSaveBtn">Add &amp; check in</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'doorlist.guests.v1';
+
+  const listRoot = document.getElementById('listRoot');
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+  const arrivedCountEl = document.getElementById('arrivedCount');
+  const totalCountEl = document.getElementById('totalCount');
+  const meterFill = document.getElementById('meterFill');
+
+  const SEED = [
+    {name:"Aisha Ahmed"},
+    {name:"Abel Marsters"},
+    {name:"Adam Leach"},
+    {name:"Aleah Goody"},
+    {name:"Alex shirtcliffe"},
+    {name:"Alice O’Brien"},
+    {name:"Amy"},
+    {name:"Andrea Mae"},
+    {name:"Annie el-Ojeili"},
+    {name:"Ariel Ward"},
+    {name:"Arthur Raymen"},
+    {name:"Bea Salmon"},
+    {name:"Beck Halliday"},
+    {name:"Bel Cargin"},
+    {name:"Ben Millin"},
+    {name:"Bentley Parker"},
+    {name:"Caelen Macdonald"},
+    {name:"Cassia Walton"},
+    {name:"Chia"},
+    {name:"Claudia Hall"},
+    {name:"Cooper Stace"},
+    {name:"Daisy Murphy"},
+    {name:"Dan Rivers"},
+    {name:"Eddie Mathews"},
+    {name:"Eli Schmidtt"},
+    {name:"Ella Tomes"},
+    {name:"Elly Mae"},
+    {name:"Emily Allan"},
+    {name:"Eve Ashby"},
+    {name:"Evia Linolson"},
+    {name:"Ffion Young"},
+    {name:"Finlay curly hair"},
+    {name:"Finley Jackon"},
+    {name:"Fletcher Ng"},
+    {name:"Frankie simes"},
+    {name:"Freddy"},
+    {name:"Gala Heather"},
+    {name:"Gaventheshredder"},
+    {name:"George Tanner"},
+    {name:"Giuliana Bolletta"},
+    {name:"Hannah Hogan"},
+    {name:"Harrison Ellis"},
+    {name:"Hazel Read"},
+    {name:"Henry Douglas"},
+    {name:"Hugo Thomas"},
+    {name:"Ida Dance"},
+    {name:"India Mahy"},
+    {name:"Iona Wilson"},
+    {name:"Ishmael"},
+    {name:"Isla Crawford W"},
+    {name:"Isy OliverClyne"},
+    {name:"Jack Adims"},
+    {name:"Jackie Lourens"},
+    {name:"Jacob Buna"},
+    {name:"Jago Robertson"},
+    {name:"James Capie"},
+    {name:"James Gray"},
+    {name:"Japhy Fuller"},
+    {name:"Jessamy"},
+    {name:"Jimi Holden"},
+    {name:"Joe Valentine"},
+    {name:"Jude Savage"},
+    {name:"Kate Bosma"},
+    {name:"Kath Noe"},
+    {name:"Kennedy Dailey"},
+    {name:"Kindekel"},
+    {name:"Ky-mani Roast"},
+    {name:"Laila Sleyer"},
+    {name:"Leila Barraud"},
+    {name:"Leo Chapman"},
+    {name:"Lilith Ercolano"},
+    {name:"Liya Yang Nightingill"},
+    {name:"Loralei Cowley"},
+    {name:"Louis Nixon"},
+    {name:"Lucian Toderascu"},
+    {name:"Lucy Preston"},
+    {name:"Maggie Wright"},
+    {name:"Maia Moana"},
+    {name:"Mali Mahal"},
+    {name:"Marcel Osullivan"},
+    {name:"Mathan Merekula"},
+    {name:"Matthew Brooker"},
+    {name:"Max Mcgovern"},
+    {name:"Max Waters"},
+    {name:"Maxwell Blackmore"},
+    {name:"Mia Doogue"},
+    {name:"Millicent"},
+    {name:"Monita Rowell"},
+    {name:"Nathan Burk"},
+    {name:"Nichica"},
+    {name:"Oceane Anfosso"},
+    {name:"Oli Fullerton"},
+    {name:"Olive Mackenzie + Carmen"},
+    {name:"Pablo"},
+    {name:"Patrick"},
+    {name:"Pete Clark"},
+    {name:"Pieta Surtees"},
+    {name:"Raf Jarman"},
+    {name:"Rata Newman"},
+    {name:"Riley Miller"},
+    {name:"Rosie Hazard"},
+    {name:"Ruby Judson"},
+    {name:"Ryder Lovegrove"},
+    {name:"Sam Butler"},
+    {name:"Samantha"},
+    {name:"Scarlett"},
+    {name:"Sean Chamberlain"},
+    {name:"Sersha Forde"},
+    {name:"Sid Nert"},
+    {name:"Sofia Zigliani"},
+    {name:"Soph Ross"},
+    {name:"Sophie Spencer"},
+    {name:"Stella"},
+    {name:"Sylvia webster"},
+    {name:"Taj Meihana"},
+    {name:"Tashi Beveridge"},
+    {name:"Theo Gannon"},
+    {name:"Theo Wright"},
+    {name:"Thomas Neville"},
+    {name:"Tildy Jackson Oliver"},
+    {name:"Tizzy"},
+    {name:"Toby makalobi"},
+    {name:"Trent Wallace"},
+    {name:"Valeria Inu"},
+    {name:"Viaaa"},
+    {name:"Will j"},
+    {name:"Zach Parker"},
+    {name:"Acaciah"},
+    {name:"Aedan Reynolds"},
+    {name:"Alex Muirhead"},
+    {name:"Alice Eden"},
+    {name:"Aman Syed"},
+    {name:"Ana Wallbank"},
+    {name:"Angus Roff"},
+    {name:"Annie Wienk"},
+    {name:"Arlo Mcann-Flemming"},
+    {name:"Bea Paiva"},
+    {name:"Beatrix Wolfe"},
+    {name:"Bee Putali"},
+    {name:"Bella"},
+    {name:"Ben Watson"},
+    {name:"Bree Souster"},
+    {name:"Cameron Pattison"},
+    {name:"Charlie Morton"},
+    {name:"Christian Pfister"},
+    {name:"Claudia Shanks"},
+    {name:"Curtis Tipping"},
+    {name:"Daisy Snedden"},
+    {name:"Dominic Brett"},
+    {name:"Eddie Westwood"},
+    {name:"Ella Malinda"},
+    {name:"Ellie Mckane"},
+    {name:"Elsie Harre"},
+    {name:"Emily Whitie"},
+    {name:"Everett Parker"},
+    {name:"Faith Robson"},
+    {name:"Findlay Shannon"},
+    {name:"Finlay straight hair"},
+    {name:"Finn Bilsborough"},
+    {name:"Floyd"},
+    {name:"Franks"},
+    {name:"Gabe Fraser-Hoult"},
+    {name:"Gart Marthnammer"},
+    {name:"George Hodgetts"},
+    {name:"Georgia Whelan"},
+    {name:"Greta Mcguiness"},
+    {name:"Harriet Mackenzie"},
+    {name:"Harry Heffernan"},
+    {name:"Hemi Smith"},
+    {name:"Holly Ireland"},
+    {name:"Hunter Robson"},
+    {name:"Igor Da Silva"},
+    {name:"Iona Ward-Macfehin"},
+    {name:"Ishan Nightingale"},
+    {name:"Isla Athfield"},
+    {name:"Issy Atherfold"},
+    {name:"Ivy Ruby"},
+    {name:"Jack Mckelvey"},
+    {name:"Jackson Roberts"},
+    {name:"Jade Newton"},
+    {name:"Jake Stokes"},
+    {name:"James Cochrane"},
+    {name:"James Mckinlay"},
+    {name:"Jay Ulrich"},
+    {name:"Jim West"},
+    {name:"Jivan Kumar"},
+    {name:"Josie Hope"},
+    {name:"Juniper Davis"},
+    {name:"Kate Mackenzie"},
+    {name:"Keira Davies"},
+    {name:"Kieran Tipper"},
+    {name:"Kindness Falloon"},
+    {name:"L’ange Grover"},
+    {name:"Lee Bradley"},
+    {name:"Leo Carroll"},
+    {name:"Lexie Bell"},
+    {name:"Lily McDowell"},
+    {name:"Lola Ryan"},
+    {name:"Louie Beverley"},
+    {name:"Louise Gromme"},
+    {name:"Lucy McCorkindale"},
+    {name:"Madeline Moffat"},
+    {name:"Maia AliceRose"},
+    {name:"Makaiden"},
+    {name:"Manaaki Midwood"},
+    {name:"Maria Hawkey"},
+    {name:"Matisse Clark"},
+    {name:"Matthew Morris"},
+    {name:"Max Walker"},
+    {name:"Maxie Munro"},
+    {name:"Megan Miles"},
+    {name:"Mia Rafferty"},
+    {name:"Mischa McMahon"},
+    {name:"Nataliyah Winiana"},
+    {name:"Ngahere Wafer"},
+    {name:"Nick Boese"},
+    {name:"Oisin"},
+    {name:"Olive"},
+    {name:"Oscar"},
+    {name:"Pakorn Putthapipat"},
+    {name:"Pepper Hall"},
+    {name:"Phoebe Doyle"},
+    {name:"Ra Mahal"},
+    {name:"Raine Piddington"},
+    {name:"Rex Gibson"},
+    {name:"Riley Stace"},
+    {name:"Ruby Boyd"},
+    {name:"Ruby Konings"},
+    {name:"Sam Blamires"},
+    {name:"Sam Devereux"},
+    {name:"Samot"},
+    {name:"Scarlett Luddon"},
+    {name:"Sean Kelly"},
+    {name:"Shay"},
+    {name:"Siena Hunter"},
+    {name:"Sonny"},
+    {name:"Sophie Goldstone"},
+    {name:"Soren Anderson"},
+    {name:"Stella Vivian"},
+    {name:"Sylvia"},
+    {name:"Tamsin Taylor"},
+    {name:"Thea Faul"},
+    {name:"Theo Middleton"},
+    {name:"Thomas Dellow"},
+    {name:"Tiana Pearl"},
+    {name:"Tip Norman"},
+    {name:"Toby August"},
+    {name:"Tomskuxx"},
+    {name:"Uma Vile"},
+    {name:"Venus mae"},
+    {name:"Walter Martin"},
+    {name:"William Bysouth"}
+  ];
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return SEED.map((g,i)=>({id:'g'+i, name:g.name, party:g.party||1, arrived:false, walkin:false}));
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
+  }
+
+  let guests = load();
+  let query = '';
+
+  function normalize(s){ return s.trim().toLowerCase(); }
+
+  function renderList(){
+    const q = normalize(query);
+    const filtered = guests.filter(g => !q || normalize(g.name).includes(q));
+    const sorted = [...filtered].sort((a,b)=> a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+
+    const arrived = guests.filter(g=>g.arrived).length;
+    arrivedCountEl.textContent = arrived;
+    totalCountEl.textContent = guests.length + ' total';
+    meterFill.style.width = guests.length ? Math.round(arrived/guests.length*100) + '%' : '0%';
+
+    listRoot.innerHTML = '';
+
+    if(guests.length === 0){
+      listRoot.innerHTML = '<div class="empty-state"><div class="glyph">&mdash;</div>No guest list yet.<br>Use the menu to add names.</div>';
+      return;
+    }
+    if(sorted.length === 0){
+      listRoot.innerHTML = '<div class="empty-state"><div class="glyph">?</div>No one matches &ldquo;'+escapeHtml(query)+'&rdquo;.</div>';
+      return;
+    }
+
+    let currentLetter = '';
+    let ul = null;
+
+    sorted.forEach(g=>{
+      const letter = g.name.trim()[0] ? g.name.trim()[0].toUpperCase() : '#';
+      if(letter !== currentLetter){
+        currentLetter = letter;
+        const h = document.createElement('div');
+        h.className = 'letter-heading';
+        h.textContent = letter;
+        listRoot.appendChild(h);
+        ul = document.createElement('ul');
+        ul.className = 'guests';
+        listRoot.appendChild(ul);
+      }
+      const li = document.createElement('li');
+      li.className = 'guest' + (g.arrived ? ' is-arrived' : '');
+
+      const info = document.createElement('div');
+      info.className = 'guest-info';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'guest-name';
+      nameEl.innerHTML = escapeHtml(g.name) + (g.party > 1 ? ' <span class="plus">+'+(g.party-1)+'</span>' : '') + (g.walkin ? '<span class="walkin-tag">Walk-in</span>' : '');
+      info.appendChild(nameEl);
+      li.appendChild(info);
+
+      const btn = document.createElement('button');
+      btn.className = 'status-btn' + (g.arrived ? ' arrived' : '');
+      btn.innerHTML = '<span class="dot"></span>' + (g.arrived ? 'Arrived' : 'Not yet');
+      btn.addEventListener('click', ()=>{
+        g.arrived = !g.arrived;
+        save();
+        renderList();
+      });
+      li.appendChild(btn);
+
+      ul.appendChild(li);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  searchInput.addEventListener('input', ()=>{
+    query = searchInput.value;
+    searchClear.classList.toggle('show', query.length > 0);
+    renderList();
+  });
+  searchClear.addEventListener('click', ()=>{
+    searchInput.value = '';
+    query = '';
+    searchClear.classList.remove('show');
+    renderList();
+    searchInput.focus();
+  });
+
+  // ---- Menu sheet ----
+  const menuBtn = document.getElementById('menuBtn');
+  const menuBackdrop = document.getElementById('menuBackdrop');
+  menuBtn.addEventListener('click', ()=> menuBackdrop.classList.add('open'));
+  document.getElementById('menuCloseBtn').addEventListener('click', ()=> menuBackdrop.classList.remove('open'));
+  menuBackdrop.addEventListener('click', (e)=>{ if(e.target === menuBackdrop) menuBackdrop.classList.remove('open'); });
+
+  document.getElementById('resetCheckinsBtn').addEventListener('click', ()=>{
+    if(confirm('Reset all check-ins? Everyone will be marked "Not yet" again.')){
+      guests.forEach(g=> g.arrived = false);
+      save(); renderList();
+      menuBackdrop.classList.remove('open');
+    }
+  });
+  document.getElementById('clearListBtn').addEventListener('click', ()=>{
+    if(confirm('Clear the entire guest list? This cannot be undone.')){
+      guests = [];
+      save(); renderList();
+      menuBackdrop.classList.remove('open');
+    }
+  });
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    const arrived = guests.filter(g=>g.arrived);
+    const text = 'Door list summary\n' + arrived.length + ' of ' + guests.length + ' checked in\n\n' +
+      arrived.sort((a,b)=>a.name.localeCompare(b.name)).map(g=> '- ' + g.name + (g.party>1?' (+'+(g.party-1)+')':'')).join('\n');
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(text).then(()=> alert('Summary copied to clipboard.'));
+    } else {
+      alert(text);
+    }
+  });
+
+  // ---- Import sheet ----
+  const importBackdrop = document.getElementById('importBackdrop');
+  const importText = document.getElementById('importText');
+  document.getElementById('importOpenBtn').addEventListener('click', ()=>{
+    menuBackdrop.classList.remove('open');
+    importText.value = guests.map(g => g.name + (g.party > 1 ? ', ' + g.party : '')).join('\n');
+    importBackdrop.classList.add('open');
+  });
+  document.getElementById('importCancelBtn').addEventListener('click', ()=> importBackdrop.classList.remove('open'));
+  importBackdrop.addEventListener('click', (e)=>{ if(e.target === importBackdrop) importBackdrop.classList.remove('open'); });
+
+  document.getElementById('importSaveBtn').addEventListener('click', ()=>{
+    const lines = importText.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    const prevByName = {};
+    guests.forEach(g => prevByName[normalize(g.name)] = g);
+
+    const newGuests = lines.map((line, i)=>{
+      const parts = line.split(',');
+      const name = parts[0].trim();
+      let party = 1;
+      if(parts[1] && !isNaN(parseInt(parts[1],10))){
+        party = Math.max(1, parseInt(parts[1],10));
+      }
+      const prev = prevByName[normalize(name)];
+      return {
+        id: prev ? prev.id : 'g'+Date.now()+i,
+        name: name,
+        party: party,
+        arrived: prev ? prev.arrived : false,
+        walkin: prev ? prev.walkin : false
+      };
+    }).filter(g => g.name.length > 0);
+
+    guests = newGuests;
+    save(); renderList();
+    importBackdrop.classList.remove('open');
+  });
+
+  // ---- Add walk-in sheet ----
+  const addBackdrop = document.getElementById('addBackdrop');
+  const addName = document.getElementById('addName');
+  const addParty = document.getElementById('addParty');
+  document.getElementById('addFab').addEventListener('click', ()=>{
+    addName.value = ''; addParty.value = '';
+    addBackdrop.classList.add('open');
+    setTimeout(()=> addName.focus(), 100);
+  });
+  document.getElementById('addCancelBtn').addEventListener('click', ()=> addBackdrop.classList.remove('open'));
+  addBackdrop.addEventListener('click', (e)=>{ if(e.target === addBackdrop) addBackdrop.classList.remove('open'); });
+
+  document.getElementById('addSaveBtn').addEventListener('click', ()=>{
+    const name = addName.value.trim();
+    if(!name) { addName.focus(); return; }
+    let party = parseInt(addParty.value, 10);
+    if(isNaN(party) || party < 1) party = 1;
+    guests.push({ id:'w'+Date.now(), name, party, arrived:true, walkin:true });
+    save(); renderList();
+    addBackdrop.classList.remove('open');
+  });
+
+  renderList();
+})();
+</script>
+</body>
+</html>
